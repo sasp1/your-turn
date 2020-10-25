@@ -1,19 +1,31 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefsHelper {
-  final String chosenNameKey = "chosenNameKey";
+  final String _chosenNameKey = "chosenNameKey";
+  final String _jwtKey = "jwtKey";
 
   const SharedPrefsHelper();
 
   Future<String> getChosenName() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    return sharedPreferences.getString(chosenNameKey);
+    return sharedPreferences.getString(_chosenNameKey);
   }
 
   Future<void> setChosenName(String name) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    await sharedPreferences.setString(chosenNameKey, name);
+    await sharedPreferences.setString(_chosenNameKey, name);
   }
+
+  Future<String> getJwt() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    return sharedPreferences.getString(_jwtKey);
+  }
+
+  Future<void> setJwt(String jwt) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    await sharedPreferences.setString(_jwtKey, jwt);
+  }
+
   //
   // // Future getAll() async {
   // //   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();

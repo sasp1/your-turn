@@ -2,15 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:your_turn/chooseNameDialog.dart';
 import 'package:your_turn/sharedPrefsHelper.dart';
 import 'package:your_turn/progressIndicator.dart';
+import 'package:your_turn/splashScreen.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-
-
-
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -32,7 +30,14 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Hola amigos'),
+      home: MyHomePage(
+        title: "Hola amigos",
+      ),
+      routes: {
+        "home": (_) => MyHomePage(
+              title: "Hola amigos",
+            )
+      },
     );
   }
 }
@@ -50,7 +55,6 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
-
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -98,7 +102,8 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
 
-    CustomProgressIndicator indicator = new CustomProgressIndicator(updateTurn, turnActive, _reset);
+    CustomProgressIndicator indicator =
+        new CustomProgressIndicator(updateTurn, turnActive, _reset);
 
     return Scaffold(
       appBar: AppBar(
@@ -146,7 +151,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 .values
                 .toList()),
       ),
-
       bottomNavigationBar: BottomAppBar(
           color: Colors.white,
           child: Container(
@@ -167,14 +171,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             onPressed: () {
                               setState(() {
                                 turnActive = !turnActive;
-                                if (!turnActive){
+                                if (!turnActive) {
                                   _reset = true;
-                                active = (active + 1) % members.length;
-                                }
-                                else{
+                                  active = (active + 1) % members.length;
+                                } else {
                                   _reset = false;
                                 }
-
                               });
                             },
                           ),
@@ -185,7 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: indicator,
                         )
                       ]),
-          )), // This trailing comma makes auto-formatting nicer for build methods.
+          )),
     );
   }
 }
