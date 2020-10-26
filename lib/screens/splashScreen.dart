@@ -1,8 +1,8 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:your_turn/rest.dart';
-import 'package:your_turn/sharedPrefsHelper.dart';
+import 'package:your_turn/services/rest.dart';
+import 'package:your_turn/services/sharedPrefsHelper.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -22,12 +22,12 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _setup() async {
-    String jwt = await _sharedPrefsHelper.getJwt();
+    String jwt = await _sharedPrefsHelper.getUserId();
 
     if (jwt == null || jwt.isEmpty)
-      jwt = await _restService.signUp();
+      jwt = await _restService.signUp("");
 
-    _sharedPrefsHelper.setJwt(jwt);
+    _sharedPrefsHelper.setUserId(jwt);
 
     Navigator.of(context).pushReplacementNamed("home");
   }

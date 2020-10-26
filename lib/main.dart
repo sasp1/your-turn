@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:your_turn/chooseNameDialog.dart';
-import 'package:your_turn/sharedPrefsHelper.dart';
-import 'package:your_turn/progressIndicator.dart';
-import 'package:your_turn/splashScreen.dart';
+import 'package:your_turn/dialogs/chooseNameDialog.dart';
+import 'package:your_turn/services/sharedPrefsHelper.dart';
+import 'package:your_turn/widgets/mainAppBar.dart';
+import 'package:your_turn/widgets/progressIndicator.dart';
+import 'package:your_turn/widgets/userList.dart';
+import 'screens/chooseNameScreen.dart';
+import 'models/user.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPrefsHelper sharedPrefs = SharedPrefsHelper();
+
+  String userId = await sharedPrefs.getUserId();
+
+  runApp(MyApp(userId));
 }
 
 class MyApp extends StatelessWidget {
+  final String userId;
+
+  MyApp(this.userId);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -30,10 +42,15 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(
-        title: "Hola amigos",
-      ),
+      home:
+      // userId == null
+      //     ? MyHomePage(
+      //         title: "Hola amigos",
+      //       )
+      //     :
+      ChooseNameScreen(),
       routes: {
+        "chooseName": (_) => ChooseNameScreen(),
         "home": (_) => MyHomePage(
               title: "Hola amigos",
             )
@@ -43,7 +60,10 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  final String userId;
+  final String title;
+
+  MyHomePage({Key key, this.title, this.userId}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -54,102 +74,63 @@ class MyHomePage extends StatefulWidget {
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
 
-  final String title;
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<String> members = [
-    "Seb",
-    "Naja",
-    "Simoneren",
-    // "Hannah",
-    // "Rasmus",
-    // "Frederik",
-    // "Høst",
-    // "Amalie",
-    // "Ida",
-    // "Rune",
-    // "Anton",
-  ];
+  String userId;
   int active = 0;
   int chosenName = -1;
   bool turnActive = false;
   bool _reset = false;
   SharedPrefsHelper _sharedPrefsHelper;
+  List<User> users;
 
   @override
   void initState() {
     super.initState();
     _sharedPrefsHelper = SharedPrefsHelper();
+    userId = widget.userId;
+    loadTimeSlots();
+  }
+
+  void loadTimeSlots() async {
+    var loadedUsers = await _sharedPrefsHelper.getUsers();
+    var userId = await _sharedPrefsHelper.getUserId();
+    // var timeSlots = await _sharedPrefsHelper.getTimeSlots();
+
+
+    setState(() {
+      users = loadedUsers;
+      chosenName = loadedUsers.indexWhere((user) => user.id == userId);
+    });
+
+
   }
 
   void updateTurn() {
     setState(() {
-      active = (active + 1) % members.length;
+      active = (active + 1) % users.length;
       turnActive = false;
+    });
+  }
+
+  void onNameUpdated(chosenNameIdx){
+    setState(() {
+      chosenName = chosenNameIdx;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-
     CustomProgressIndicator indicator =
         new CustomProgressIndicator(updateTurn, turnActive, _reset);
 
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(chosenName == -1 ? widget.title : members[chosenName]),
-        actions: [
-          Padding(
-              padding: EdgeInsets.only(right: 20.0),
-              child: GestureDetector(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => ChooseNameDialog((index) {
-                      setState(() {
-                        chosenName = index;
-                      });
-                    }, members),
-                  );
-                },
-                child: Icon(
-                  Icons.settings,
-                  size: 26.0,
-                ),
-              )),
-        ],
-      ),
+      appBar: MainAppBar(chosenName == -1 ? widget.title : users[chosenName].name, users, onNameUpdated),
       body: Center(
-        child: ListView(
-            children: members
-                .asMap()
-                .map((i, e) => MapEntry(
-                    i,
-                    Container(
-                      height: 50,
-                      color: active == i && turnActive
-                          ? Colors.red[100]
-                          : active == i
-                              ? Colors.blue[100]
-                              : Colors.white,
-                      child: Center(
-                        child: Text(e),
-                      ),
-                    )))
-                .values
-                .toList()),
+        child: UserList(users, turnActive, active, (_) {}),
       ),
       bottomNavigationBar: BottomAppBar(
           color: Colors.white,
@@ -173,7 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 turnActive = !turnActive;
                                 if (!turnActive) {
                                   _reset = true;
-                                  active = (active + 1) % members.length;
+                                  active = (active + 1) % users.length;
                                 } else {
                                   _reset = false;
                                 }

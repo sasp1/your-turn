@@ -17,9 +17,6 @@ class CustomProgressIndicator extends StatefulWidget {
   @override
   _CustomProgressIndicatorState createState() => state;
 
-  void updateTurn() {
-    // state.updateTurn();
-  }
 }
 
 class _CustomProgressIndicatorState extends State<CustomProgressIndicator>
@@ -27,7 +24,6 @@ class _CustomProgressIndicatorState extends State<CustomProgressIndicator>
   AnimationController controller;
   Animation<double> animation;
   bool active = false;
-  bool _reset = false;
 
   @override
   void didUpdateWidget(covariant CustomProgressIndicator oldWidget) {
@@ -36,14 +32,12 @@ class _CustomProgressIndicatorState extends State<CustomProgressIndicator>
     if (widget.reset) {
       controller.reset();
       controller.forward();
-
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _reset = widget.reset;
     controller = AnimationController(
         duration: const Duration(milliseconds: 5000), vsync: this);
 
