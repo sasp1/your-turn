@@ -39,7 +39,6 @@ class ChooseNameState extends State<ChooseNameScreen> {
 
     await _sharedPrefsHelper.setUsers(users);
 
-
     Navigator.of(context).pushReplacementNamed("home");
   }
 

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:your_turn/models/user.dart';
+
 class TimeSlot {
   TimeSlot(this.userId, this.timeStart, this.timeEnd);
 

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:your_turn/dialogs/chooseNameDialog.dart';
+import 'package:your_turn/models/timeSlot.dart';
+import 'package:your_turn/services/rest.dart';
 import 'package:your_turn/services/sharedPrefsHelper.dart';
 import 'package:your_turn/widgets/mainAppBar.dart';
 import 'package:your_turn/widgets/progressIndicator.dart';
-import 'package:your_turn/widgets/userList.dart';
+import 'package:your_turn/widgets/timeSlotList.dart';
 import 'screens/chooseNameScreen.dart';
 import 'models/user.dart';
 
@@ -43,12 +44,12 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home:
-      // userId == null
-      //     ? MyHomePage(
-      //         title: "Hola amigos",
-      //       )
-      //     :
-      ChooseNameScreen(),
+          // userId == null
+          //     ? MyHomePage(
+          //         title: "Hola amigos",
+          //       )
+          //     :
+          ChooseNameScreen(),
       routes: {
         "chooseName": (_) => ChooseNameScreen(),
         "home": (_) => MyHomePage(
@@ -81,16 +82,21 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String userId;
   int active = 0;
-  int chosenName = -1;
+  int chosenNameIdx = -1;
+  String _chosenName;
   bool turnActive = false;
   bool _reset = false;
   SharedPrefsHelper _sharedPrefsHelper;
-  List<User> users;
+  RestService _rest;
+  List<User> _users;
+  List<TimeSlot> _timeSlots;
+
 
   @override
   void initState() {
     super.initState();
     _sharedPrefsHelper = SharedPrefsHelper();
+    _rest = RestService();
     userId = widget.userId;
     loadTimeSlots();
   }
@@ -98,27 +104,27 @@ class _MyHomePageState extends State<MyHomePage> {
   void loadTimeSlots() async {
     var loadedUsers = await _sharedPrefsHelper.getUsers();
     var userId = await _sharedPrefsHelper.getUserId();
-    // var timeSlots = await _sharedPrefsHelper.getTimeSlots();
-
+    var timeSlots = await _rest.getTimeSlots();
 
     setState(() {
-      users = loadedUsers;
-      chosenName = loadedUsers.indexWhere((user) => user.id == userId);
+      _timeSlots = timeSlots;
+      _users = loadedUsers;
+      chosenNameIdx = _timeSlots.indexWhere((ts) => ts.userId == userId);
+      _chosenName = loadedUsers.firstWhere((element) => element.id == userId).name;
     });
-
-
   }
 
   void updateTurn() {
     setState(() {
-      active = (active + 1) % users.length;
+      active = (active + 1) % _timeSlots.length;
       turnActive = false;
     });
   }
 
-  void onNameUpdated(chosenNameIdx){
+  void onNameUpdated(index) {
     setState(() {
-      chosenName = chosenNameIdx;
+      chosenNameIdx = _timeSlots.indexWhere((ts) => ts.userId == _users[index].id);
+      _chosenName = _users[index].name;
     });
   }
 
@@ -128,16 +134,19 @@ class _MyHomePageState extends State<MyHomePage> {
         new CustomProgressIndicator(updateTurn, turnActive, _reset);
 
     return Scaffold(
-      appBar: MainAppBar(chosenName == -1 ? widget.title : users[chosenName].name, users, onNameUpdated),
+      appBar: MainAppBar(
+          _chosenName == null ? widget.title : _chosenName,
+          _users,
+          onNameUpdated),
       body: Center(
-        child: UserList(users, turnActive, active, (_) {}),
+        child: TimeSlotList(_timeSlots, _users, turnActive, active, (_) {}),
       ),
       bottomNavigationBar: BottomAppBar(
           color: Colors.white,
           child: Container(
-            height: chosenName == active ? 55 : 4,
+            height: chosenNameIdx == active ? 55 : 4,
             child: Column(
-                children: chosenName == active
+                children: chosenNameIdx == active
                     ? [
                         Container(
                           child: indicator,
@@ -154,7 +163,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 turnActive = !turnActive;
                                 if (!turnActive) {
                                   _reset = true;
-                                  active = (active + 1) % users.length;
+                                  active = (active + 1) % _users.length;
                                 } else {
                                   _reset = false;
                                 }
