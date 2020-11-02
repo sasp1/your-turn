@@ -6,13 +6,15 @@ class CustomProgressIndicator extends StatefulWidget {
   final _CustomProgressIndicatorState state =
       new _CustomProgressIndicatorState();
   final bool reset;
+  final double startFrom;
+  final Duration duration;
 
   static of(BuildContext context, {bool root = false}) => root
       ? context.findRootAncestorStateOfType<_CustomProgressIndicatorState>()
       : context.findAncestorStateOfType<_CustomProgressIndicatorState>();
 
   // Here I am receiving the function in constructor as params
-  CustomProgressIndicator(this.onTurnChanged, this.active, this.reset);
+  CustomProgressIndicator(this.onTurnChanged, this.active, this.reset, this.startFrom, this.duration);
 
   @override
   _CustomProgressIndicatorState createState() => state;
@@ -39,7 +41,7 @@ class _CustomProgressIndicatorState extends State<CustomProgressIndicator>
   void initState() {
     super.initState();
     controller = AnimationController(
-        duration: const Duration(milliseconds: 5000), vsync: this);
+        duration: widget.duration, vsync: this);
 
     animation = Tween(begin: 0.0, end: 1.0).animate(controller)
       ..addListener(() {
@@ -58,7 +60,8 @@ class _CustomProgressIndicatorState extends State<CustomProgressIndicator>
       }
     });
 
-    controller.forward();
+
+    controller.forward(from: widget.startFrom);
     // controller.repeat();
   }
 

@@ -43,13 +43,11 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home:
-          // userId == null
-          //     ? MyHomePage(
-          //         title: "Hola amigos",
-          //       )
-          //     :
-          ChooseNameScreen(),
+      home: userId != null
+          ? MyHomePage(
+              title: "Hola amigos",
+            )
+          : ChooseNameScreen(),
       routes: {
         "chooseName": (_) => ChooseNameScreen(),
         "home": (_) => MyHomePage(
@@ -90,7 +88,8 @@ class _MyHomePageState extends State<MyHomePage> {
   RestService _rest;
   List<User> _users;
   List<TimeSlot> _timeSlots;
-
+  double startFrom;
+  Duration tsDuration;
 
   @override
   void initState() {
@@ -106,12 +105,17 @@ class _MyHomePageState extends State<MyHomePage> {
     var userId = await _sharedPrefsHelper.getUserId();
     var timeSlots = await _rest.getTimeSlots();
 
+    timeSlots.sort((a, b) => a.timeStart.compareTo(b.timeStart));
+
     setState(() {
       _timeSlots = timeSlots;
       _users = loadedUsers;
       chosenNameIdx = _timeSlots.indexWhere((ts) => ts.userId == userId);
-      _chosenName = loadedUsers.firstWhere((element) => element.id == userId).name;
+      _chosenName =
+          loadedUsers.firstWhere((element) => element.id == userId).name;
     });
+
+    updateActiveTimeSlot();
   }
 
   void updateTurn() {
@@ -123,33 +127,69 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void onNameUpdated(index) {
     setState(() {
-      chosenNameIdx = _timeSlots.indexWhere((ts) => ts.userId == _users[index].id);
+      chosenNameIdx =
+          _timeSlots.indexWhere((ts) => ts.userId == _users[index].id);
       _chosenName = _users[index].name;
     });
   }
 
+  void updateActiveTimeSlot() {
+    var now = DateTime.now();
+    int secsToday = now.hour * 60 * 60 + now.minute * 60 + now.second;
+
+    var timeSlotIdx = _timeSlots.indexWhere(
+        (ts) => secsToday >= ts.timeStart && secsToday < ts.timeEnd);
+
+    if (timeSlotIdx > 0) {
+      var ts = _timeSlots[timeSlotIdx];
+      int durationSecs = ts.timeEnd - ts.timeStart;
+
+      setState(() {
+        startFrom = (secsToday - ts.timeStart).toDouble() / durationSecs;
+        tsDuration = Duration(seconds: ts.timeEnd - ts.timeStart);
+        active = timeSlotIdx;
+      });
+    } else {
+      timeSlotIdx =
+          _timeSlots.indexWhere((element) => secsToday < element.timeEnd);
+
+      if (timeSlotIdx > 0) {
+        var ts = _timeSlots[timeSlotIdx];
+        startFrom = 0.0;
+        tsDuration = Duration(seconds: ts.timeEnd - secsToday);
+        active = timeSlotIdx;
+      } else {
+        setState(() {
+          tsDuration = null;
+          active = -1;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    CustomProgressIndicator indicator =
-        new CustomProgressIndicator(updateTurn, turnActive, _reset);
-
     return Scaffold(
-      appBar: MainAppBar(
-          _chosenName == null ? widget.title : _chosenName,
-          _users,
-          onNameUpdated),
+      appBar: MainAppBar(_chosenName == null ? widget.title : _chosenName,
+          _users, onNameUpdated),
       body: Center(
         child: TimeSlotList(_timeSlots, _users, turnActive, active, (_) {}),
       ),
       bottomNavigationBar: BottomAppBar(
-          color: Colors.white,
-          child: Container(
-            height: chosenNameIdx == active ? 55 : 4,
-            child: Column(
-                children: chosenNameIdx == active
-                    ? [
+        color: Colors.white,
+        child: Container(
+            height: chosenNameIdx != active && tsDuration != null ? 4 : 55, // chosenNameIdx == active ? 55 : 4,
+            child: tsDuration == null
+                ? Container(
+                    child: Center(
+                      child: Text("No active time slot"),
+                    ),
+                  )
+                : chosenNameIdx == active
+                    ? Column(children: [
                         Container(
-                          child: indicator,
+                          child: CustomProgressIndicator(updateTurn, turnActive,
+                              _reset, startFrom, tsDuration),
                         ),
                         Container(
                           height: 50,
@@ -163,7 +203,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 turnActive = !turnActive;
                                 if (!turnActive) {
                                   _reset = true;
-                                  active = (active + 1) % _users.length;
+                                  active = (active + 1) % _timeSlots.length;
                                 } else {
                                   _reset = false;
                                 }
@@ -171,13 +211,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             },
                           ),
                         ),
-                      ]
-                    : [
-                        Container(
-                          child: indicator,
-                        )
-                      ]),
-          )),
+                      ])
+                    : Container(
+                        child: CustomProgressIndicator(updateTurn, turnActive,
+                            _reset, startFrom, tsDuration),
+                      )),
+      ),
     );
   }
 }

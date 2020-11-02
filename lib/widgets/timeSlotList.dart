@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:your_turn/models/timeSlot.dart';
 import 'package:your_turn/models/user.dart';
 
@@ -18,6 +19,11 @@ class TimeSlotList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
+
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+    DateFormat format = DateFormat("HH:mm");
+
     return ListView(
         children: timeSlots
             .asMap()
@@ -33,7 +39,9 @@ class TimeSlotList extends StatelessWidget {
                   child: ListTile(
                     title: Center(
                       child: Text(
-                          users.firstWhere((user) => user.id == e.userId).name),
+                          "${users.firstWhere((user) => user.id == e.userId).name}  "
+                          "${DateFormat("HH:mm").format(today.add(Duration(seconds: e.timeStart)))} - "
+                          "${DateFormat("HH:mm").format(today.add(Duration(seconds: e.timeEnd)))}"),
                     ),
                     onTap: () {
                       onItemChosen(i);
