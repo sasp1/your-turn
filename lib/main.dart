@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:your_turn/models/timeSlot.dart';
 import 'package:your_turn/services/rest.dart';
 import 'package:your_turn/services/sharedPrefsHelper.dart';
+import 'package:your_turn/viewmodels/user_model.dart';
 import 'package:your_turn/widgets/mainAppBar.dart';
 import 'package:your_turn/widgets/progressIndicator.dart';
 import 'package:your_turn/widgets/timeSlotList.dart';
@@ -43,16 +45,15 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: userId != null
-          ? MyHomePage(
-              title: "Hola amigos",
-            )
-          : ChooseNameScreen(),
+      home: Provider(
+        create: (_)  => UserModel(),
+        child: userId != null
+            ? MyHomePage("Hola amigos", userId)
+            : ChooseNameScreen(),
+      ),
       routes: {
         "chooseName": (_) => ChooseNameScreen(),
-        "home": (_) => MyHomePage(
-              title: "Hola amigos",
-            )
+        "home": (_) => MyHomePage("Hola amigos", userId)
       },
     );
   }
@@ -62,7 +63,7 @@ class MyHomePage extends StatefulWidget {
   final String userId;
   final String title;
 
-  MyHomePage({Key key, this.title, this.userId}) : super(key: key);
+  MyHomePage(this.title, this.userId);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -79,13 +80,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String userId;
+  String _chosenName;
   int active = 0;
   int chosenNameIdx = -1;
-  String _chosenName;
   bool turnActive = false;
   bool _reset = false;
-  SharedPrefsHelper _sharedPrefsHelper;
-  RestService _rest;
+  SharedPrefsHelper _sharedPrefsHelper = SharedPrefsHelper();
+  RestService _rest = RestService();
   List<User> _users;
   List<TimeSlot> _timeSlots;
   double startFrom;
@@ -94,7 +95,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _sharedPrefsHelper = SharedPrefsHelper();
     _rest = RestService();
     userId = widget.userId;
     loadTimeSlots();
@@ -178,7 +178,8 @@ class _MyHomePageState extends State<MyHomePage> {
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         child: Container(
-            height: chosenNameIdx != active && tsDuration != null ? 4 : 55, // chosenNameIdx == active ? 55 : 4,
+            height: chosenNameIdx != active && tsDuration != null ? 4 : 55,
+            // chosenNameIdx == active ? 55 : 4,
             child: tsDuration == null
                 ? Container(
                     child: Center(

@@ -39,7 +39,7 @@ class ChooseNameState extends State<ChooseNameScreen> {
 
     await _sharedPrefsHelper.setUsers(users);
 
-    Navigator.of(context).pushReplacementNamed("home");
+    Navigator.of(context)?.pushReplacementNamed("home");
   }
 
   @override
@@ -73,6 +73,7 @@ class ChooseNameState extends State<ChooseNameScreen> {
             List<Widget> children;
             if (snapshot.connectionState == ConnectionState.done &&
                 snapshot.hasData) {
+
               return UserList(snapshot.data, false, _active, onNameChosen);
 
             } else if (snapshot.hasError) {

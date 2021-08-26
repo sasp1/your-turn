@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:your_turn/models/user.dart';
+import 'package:provider/provider.dart';
+import 'package:your_turn/viewmodels/user_model.dart';
 
 class UserList extends StatelessWidget {
   final List<User> users;
@@ -15,6 +17,7 @@ class UserList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
+
     return ListView(
         children: users
             .asMap()
@@ -22,18 +25,18 @@ class UserList extends StatelessWidget {
                 i,
                 Container(
                   height: 50,
-                  color: highlighted == i && active
-                      ? Colors.red[100]
-                      : highlighted == i
-                          ? Colors.blue[100]
-                          : Colors.white,
+                  color:
+                      highlighted == context.watch<UserModel>().selectedUser &&
+                              active
+                          ? Colors.red[100]
+                          : highlighted == i
+                              ? Colors.blue[100]
+                              : Colors.white,
                   child: ListTile(
                     title: Center(
                       child: Text(e.name),
                     ),
-                    onTap: () {
-                      onItemChosen(i);
-                    },
+                    onTap: () => context.read<UserModel>().selectUser(i),
                   ),
                 )))
             .values

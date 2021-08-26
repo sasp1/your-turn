@@ -10,14 +10,12 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  SharedPrefsHelper _sharedPrefsHelper;
-  RestService _restService;
+  SharedPrefsHelper _sharedPrefsHelper= SharedPrefsHelper();
+  RestService _restService= RestService();
 
   @override
   void initState() {
     super.initState();
-    _sharedPrefsHelper = SharedPrefsHelper();
-    _restService = RestService();
     _setup();
   }
 
@@ -29,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     _sharedPrefsHelper.setUserId(jwt);
 
-    Navigator.of(context).pushReplacementNamed("home");
+    Navigator.of(context)?.pushReplacementNamed("home");
   }
 
   @override
